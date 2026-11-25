@@ -1,0 +1,26 @@
+name: A report number or label looks wrong
+description: Describe one source discrepancy without sharing a private or paid PDF.
+title: 'Reading discrepancy: '
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach a paid PDF, account details, screenshots of holdings, or licensed report text. A made-up row with the same layout is ideal.
+  - type: dropdown
+    id: source
+    attributes:
+      label: Which source?
+      options: [Morningstar, Argus Analyst, Argus A6, Argus Options]
+    validations:
+      required: true
+  - type: textarea
+    id: mismatch
+    attributes:
+      label: What did the reader show, and what should it have shown?
+      description: Include row name, units, year or quarter, actual/forecast status, and current/prior if relevant. Invented values are fine.
+    validations:
+      required: true
+  - type: input
+    id: edition
+    attributes:
+      label: Reader version and browser
+      placeholder: e.g. 4.5, Safari on iPhone

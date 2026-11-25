@@ -1,0 +1,304 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Research Report Reader</title><meta name="theme-color" content="#132239"><link rel="apple-touch-icon" href="/reader/assets/icon-192.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/reader/styles.css"><link rel="stylesheet" href="/reader/mobile.css"><link rel="stylesheet" href="/reader/improvements.css"><link rel="icon" href="/reader/assets/icon-192.png"></head><body>
+    <div id="connection-banner" class="connection-banner" role="status" hidden>Offline. Keep this tab open to continue reading. Refreshing clears the session.</div><div class="app-shell">
+      <aside id="library-sidebar" class="sidebar"><button id="close-library" class="close-library" type="button" aria-label="Close reports">×</button>
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img">
+              <path d="M7 3.75h7.5L18 7.3v12.95H7z"></path>
+              <path d="M14.5 3.75V7.3H18M9.7 11h5.6M9.7 14h5.6M9.7 17h3.7"></path>
+            </svg>
+          </div>
+          <div>
+            <strong>Research Report Reader</strong>
+            <span>Morningstar + Argus</span>
+          </div>
+        </div>
+
+        <button id="open-pdf" class="add-report-button" type="button">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"></path></svg>
+          Add research report
+        </button>
+        <div class="provider-shortcuts" aria-label="Add by provider">
+          <button id="sidebar-open-morningstar" class="provider-shortcut is-morningstar" type="button"><span>M</span> Morningstar</button>
+          <button id="sidebar-open-argus" class="provider-shortcut is-argus" type="button"><span>A</span> Argus</button>
+        </div>
+        <input id="pdf-file" type="file" accept="application/pdf,.pdf" multiple hidden>
+
+        <div class="library-heading">
+          <div>
+            <span class="section-label">This tab</span>
+            <h2>Session reports</h2>
+          </div>
+          <span id="report-count" class="count-badge">0</span>
+        </div>
+
+        <label class="search-box">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="4.75"></circle><path d="m12 12 4 4"></path></svg>
+          <span class="sr-only">Search session reports</span>
+          <input id="library-search" type="search" placeholder="Search company or ticker" autocomplete="off">
+        </label>
+        <div id="library-provider-filter" class="library-provider-filter" role="group" aria-label="Filter session reports by provider">
+          <button class="active" type="button" data-library-provider="all">All</button>
+          <button type="button" data-library-provider="morningstar">Morningstar</button>
+          <button type="button" data-library-provider="argus">Argus</button>
+        </div>
+
+        <button id="clear-session" class="refresh-library" type="button" disabled>Clear session</button><button id="install-reader" class="refresh-library" type="button" hidden>Install reader</button><nav id="report-library" class="report-library" aria-label="Session reports"></nav>
+        <div id="library-empty" class="library-empty">
+          <div class="library-empty-icon" aria-hidden="true">PDF</div>
+          <strong>No reports open</strong>
+          <span>Add a Morningstar or Argus PDF to start reading.</span>
+        </div>
+
+        <div class="storage-note">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 8V6.5a4.5 4.5 0 0 1 9 0V8M4 8h12v9H4z"></path></svg>
+          <div>
+            <strong>This session only</strong>
+            <span>PDFs stay in this tab. Refreshing or closing it clears the reports. Keep your original files.</span>
+            <small class="app-version">Web version 4.6</small>
+          </div>
+        </div>
+      </aside>
+
+      <button id="library-backdrop" class="library-backdrop" aria-label="Close reports" type="button" hidden></button><main id="workspace" class="workspace">
+        <header class="top-bar">
+          <button id="toggle-sidebar" class="sidebar-toggle" type="button" aria-controls="library-sidebar" aria-expanded="true" aria-label="Hide sidebar" title="Hide sidebar">
+            <span class="sidebar-toggle-label">Hide reports</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M9 4v16M16 9l-3 3 3 3"></path></svg>
+          </button>
+          <div class="top-title">
+            <span id="workspace-context" class="section-label">Report reader</span>
+            <h1 id="workspace-title">Research Report Reader</h1>
+          </div>
+          <div class="top-actions">
+            <button id="toolbar-add-report" class="toolbar-add-report" type="button">+ Add report</button>
+            <button id="find-report" class="find-report-button" type="button" title="Find in this view (Ctrl+F)" hidden>Find</button>
+            <span id="status-pill" class="status-pill" hidden>Ready</span>
+            <details id="report-menu" class="action-menu" hidden>
+              <summary aria-label="Report actions">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1"></circle><circle cx="10" cy="10" r="1"></circle><circle cx="16" cy="10" r="1"></circle></svg>
+              </summary>
+              <div class="action-menu-popover">
+                <div id="original-pdf-actions"></div>
+                <button id="copy-summary" type="button">Copy text summary</button>
+                <button id="save-summary" type="button">Save text summary</button>
+                <button id="remove-current-report" class="danger-action" type="button">Remove from session</button>
+              </div>
+            </details>
+          </div>
+        </header>
+        <div id="report-find-bar" class="report-find-bar" role="search" hidden>
+          <label for="report-find-input">Find in this view</label>
+          <input id="report-find-input" type="search" placeholder="Metric, year, number or topic" autocomplete="off">
+          <span id="report-find-count" role="status" aria-live="polite"></span>
+          <button id="report-find-previous" type="button" aria-label="Previous match">↑</button>
+          <button id="report-find-next" type="button" aria-label="Next match">↓</button>
+          <button id="report-find-close" type="button">Done</button>
+        </div>
+        <div id="operation-error" class="operation-error" role="alert" hidden>
+          <span></span><button id="dismiss-error" type="button" aria-label="Dismiss error">Dismiss</button>
+        </div>
+
+        <section id="empty-state" class="empty-state">
+          <div id="drop-zone" class="welcome-card" tabindex="0" role="button" aria-label="Add a research report">
+            <div class="welcome-copy">
+              <div class="empty-file-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 3.5h7.5L18 7v13.5H7z"></path><path d="M14.5 3.5V7H18M9.5 11h6M9.5 14h6M9.5 17h4"></path></svg>
+              </div>
+              <span class="section-label">Research report reader</span>
+              <h2>Open a Morningstar or Argus report</h2>
+              <p>Choose a downloaded PDF to see key financials, forecasts and analyst research. Add more reports at any time.</p>
+              <div class="provider-choice-grid">
+                <button id="empty-open-morningstar" class="provider-choice provider-choice-morningstar" type="button">
+                  <span class="provider-choice-badge">M</span>
+                  <span class="provider-choice-copy">
+                    <strong>Morningstar</strong>
+                    <small>One Equity Analyst PDF</small>
+                    <span class="provider-choice-tags"><em>Fair value</em><em>Moat</em><em>Forecast tables</em></span>
+                  </span>
+                  
+                </button>
+                <button id="empty-open-argus" class="provider-choice provider-choice-argus" type="button">
+                  <span class="provider-choice-badge">A</span>
+                  <span class="provider-choice-copy">
+                    <strong>Argus</strong>
+                    <small>Choose 1–3 PDFs for the same company</small>
+                    <span class="provider-choice-tags"><em>Analyst</em><em>A6 Quant</em><em>Options</em></span>
+                  </span>
+                  
+                </button>
+              </div>
+              <span class="drop-hint">or drag and drop supported PDF files</span>
+              <div class="file-constraints" aria-label="File requirements">
+                <span>PDF only</span>
+                <span>60 MB each</span>
+                <span>No account needed</span>
+              </div>
+              <p class="empty-library-note">Reports stay in this tab only. Refreshing or closing it clears them; your original files are unchanged.</p>
+            </div>
+          </div>
+        </section>
+
+        <article id="report-view" class="report-view" hidden>
+          <section class="report-hero">
+            <div class="identity-row">
+              <div class="company-identity">
+                <div id="ticker-mark" class="ticker-mark" hidden aria-hidden="true">—</div>
+                <div>
+                  <span id="provider-badge" class="section-label" hidden>Morningstar equity analyst report</span>
+                  <h2 id="report-title" hidden></h2>
+                  <p id="report-meta" class="muted-line"></p>
+                </div>
+              </div>
+              <div class="rating-stack">
+                <span>Morningstar rating</span>
+                <div id="star-rating" class="star-rating" aria-label=""></div>
+              </div>
+            </div>
+
+            <div class="snapshot-grid">
+              <article class="snapshot-card primary-snapshot">
+                <span>Last price</span>
+                <strong id="hero-price">—</strong>
+                <small id="price-date">As printed in the PDF</small>
+              </article>
+              <article class="snapshot-card fair-value-snapshot">
+                <span>Fair value estimate</span>
+                <strong id="hero-fair-value">—</strong>
+                <small id="fair-value-date">Morningstar estimate</small>
+              </article>
+              <article class="snapshot-card">
+                <span>Price / fair value</span>
+                <strong id="hero-price-fve">—</strong>
+                <small>As printed in report</small>
+              </article>
+              <article class="snapshot-card">
+                <span>Economic moat</span>
+                <strong id="hero-moat">—</strong>
+                <small id="hero-moat-trend">Moat trend: not captured</small>
+              </article>
+            </div>
+
+            <div id="facts-grid" class="facts-grid"></div>
+            <button id="summary-source-review" class="summary-review-link" data-scroll-target="quality-section" type="button" hidden></button>
+            <p class="source-note">Source: selected Morningstar PDF. Values are not live market data. The app does not generate a new investment recommendation.</p>
+          </section>
+
+          <nav class="section-nav" aria-label="Report sections">
+            <button type="button" data-scroll-target="priority-section">Key report fields</button>
+            <button type="button" data-scroll-target="analysis-section">Analyst research</button>
+            <button type="button" data-scroll-target="source-section">All financial tables</button>
+            <button type="button" data-scroll-target="quality-section">Source checks</button>
+          </nav>
+
+          <section id="priority-section" class="content-block priority-block">
+            <div class="section-title-row">
+              <div>
+                <span class="section-label">Key report fields</span>
+                <h2>Key financials & forecasts</h2>
+                <p id="forecast-description" class="muted-line"></p>
+              </div>
+              <span id="priority-coverage" class="coverage-pill" hidden></span>
+            </div>
+            <div id="priority-grid" class="priority-grid"></div>
+          </section>
+
+          <section id="analysis-section" class="content-block">
+            <div class="section-title-row">
+              <div>
+                <span class="section-label">Research sections</span>
+                <h2>Analyst research</h2>
+                <p class="muted-line">Narrative sections extracted from the report.</p>
+              </div>
+            </div>
+            <div id="sections-list" class="sections-list"></div>
+          </section>
+
+          <section id="source-section" class="content-block source-block">
+            <div class="section-title-row">
+              <div>
+                <span class="section-label">Model tables</span>
+                <h2>Complete actual and forecast tables</h2>
+                <p class="muted-line">All extracted rows and periods. Key fields are shaded.</p>
+              </div>
+              <button id="history-toggle" class="outline-button compact" type="button" aria-pressed="true">Actual + forecast</button>
+            </div>
+            <div id="table-tabs" class="table-tabs" aria-label="Morningstar source tables"></div>
+            <div id="source-table-host" class="source-table-host"></div>
+          </section>
+
+          <details id="quality-section" class="content-block quality-block">
+            <summary>
+              <div>
+                <span class="section-label">Extraction status</span>
+                <h2>Source capture details</h2>
+                <p class="muted-line">Items not captured or needing review against the original PDF.</p>
+              </div>
+              <span id="quality-score" class="coverage-pill"></span>
+            </summary>
+            <div id="quality-detail" class="quality-detail"></div>
+          </details>
+        </article>
+
+        <article id="argus-report-view" class="argus-report-view" hidden></article>
+      </main>
+    </div>
+
+
+    <dialog id="provider-dialog" class="provider-dialog">
+      <form method="dialog" class="provider-dialog-card">
+        <div class="provider-dialog-head">
+          <div>
+            <span class="section-label">Add research</span>
+            <h2>Which report are you opening?</h2>
+            <p>Morningstar uses one PDF. Argus accepts any of its three report types.</p>
+          </div>
+          <button class="dialog-close" value="cancel" aria-label="Close" type="submit">×</button>
+        </div>
+        <div class="provider-dialog-options">
+          <button id="choose-morningstar" class="provider-dialog-option" value="cancel" type="button">
+            <span class="provider-logo morningstar-logo">M</span>
+            <span><strong>Morningstar</strong><small>Open one Equity Analyst PDF</small><em>Best for fair value, moat, analyst narrative, and model tables</em></span>
+            
+          </button>
+          <button id="choose-argus" class="provider-dialog-option" value="cancel" type="button">
+            <span class="provider-logo argus-logo">A</span>
+            <span><strong>Argus</strong><small>Open one to three PDFs</small><em>Analyst + A6 + Options can be combined into one company view</em></span>
+            
+          </button>
+        </div>
+        <p class="provider-dialog-note">Argus reports are kept as separate sources inside one company view. Analyst and A6 targets are never averaged together.</p>
+      </form>
+    </dialog>
+
+    <div id="drop-overlay" class="drop-overlay" hidden>
+      <div>
+        <span>PDF</span>
+        <strong>Drop report PDF(s)</strong>
+        <small>Morningstar uses one PDF. Argus can use up to three.</small>
+      </div>
+    </div>
+    <dialog id="source-viewer" class="source-viewer" aria-labelledby="source-viewer-title">
+      <header>
+        <div><h2 id="source-viewer-title">Original report</h2><p id="source-name"></p></div>
+        <button id="source-close" type="button" aria-label="Close original report">Close</button>
+      </header>
+      <div class="source-viewer-toolbar">
+        <label class="source-document-label">Source <select id="source-document"></select></label>
+        <div class="source-page-controls">
+          <button id="source-previous" type="button" aria-label="Previous PDF page">←</button>
+          <label>Page <input id="source-page" type="number" min="1" value="1"></label><span id="source-pages"></span>
+          <button id="source-next" type="button" aria-label="Next PDF page">→</button>
+        </div>
+        <label>Zoom <select id="source-zoom"><option value="fit">Fit width</option><option value="1">100%</option><option value="1.5">150%</option><option value="2">200%</option></select></label>
+        <div class="source-view-switch"><button type="button" data-source-view="pdf" aria-pressed="true">PDF page</button><button type="button" data-source-view="text" aria-pressed="false">Page text</button></div>
+      </div>
+      <div id="source-viewport" class="source-viewport" tabindex="0" aria-label="Original PDF page" aria-busy="false">
+        <p id="source-status" role="status"></p>
+        <div id="source-image-wrap"><canvas id="source-canvas" role="img" aria-label="Original PDF page"></canvas></div>
+        <div id="source-text-wrap" hidden><p class="source-text-note">Extracted page text. Refer to the PDF page for table layout and column order.</p><pre id="source-page-text"></pre></div>
+      </div>
+      <footer><span>The original PDF for this session. Figures and dates are reproduced as printed.</span><button id="source-external" type="button">Open original PDF</button></footer>
+    </dialog>
+    <div id="toast" class="toast" hidden></div>
+    
+  <script type="module" src="/reader/boot.js"></script></body></html>
