@@ -5,6 +5,8 @@ Node/SQLite account-and-library architecture at the user's explicit request.
 The user wants a simple public link, free/cheap hosting, phone and desktop use,
 and no programmer setup for readers. Long-term report saving is no longer needed.
 
+Project source: [vp24/research-report-reader](https://github.com/vp24/research-report-reader), branch **main**. Start future changes from the current repository. The packaged 4.6 handoff is an offline snapshot.
+
 ## Architecture
 
 - public/index.html: shell; public/reader/boot.js: startup and session lifecycle.

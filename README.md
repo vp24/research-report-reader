@@ -5,12 +5,13 @@ It surfaces source financials, forecasts, targets and analyst reasoning, retaini
 historical years, units, actual/forecast labels and distinctions between sources.
 It does not generate an independent investment recommendation. Opening a report shows all years. On a phone, choose a fiscal year to see it across metrics, then tap a figure to verify the printed value, page and date when available. Saving a text summary includes all periods, even while a single year is selected.
 
+[Build checks and website download](https://github.com/vp24/research-report-reader/actions/workflows/verify.yml) · [Report an extraction error](https://github.com/vp24/research-report-reader/issues/new?template=reading-discrepancy.yml)
+
 ## Publish
 
-Follow START-HERE.txt. The release's WEBSITE-UPLOAD.zip is prebuilt for Cloudflare
-Pages Direct Upload. Its root contains index.html, _headers, _redirects and all
+For a website ZIP from GitHub, follow [GITHUB-SETUP.md](GITHUB-SETUP.md). If you already have **WEBSITE-UPLOAD.zip**, go straight to [START-HERE.txt](START-HERE.txt) for Cloudflare Pages Direct Upload. Its root contains index.html, _headers, _redirects and all
 runtime assets. No backend, credentials, database, or build step is required.
-The source/public directory is the identical deployable website.
+The `public/` directory in this repository contains the same deployable website.
 
 ## Session-only reports
 

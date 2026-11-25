@@ -2,12 +2,15 @@
 
 Readers need only the public website link. GitHub is for the person maintaining the code. The site can be public whether the source repository is private or public.
 
-**Publish the enclosed project once (no commands):**
+[vp24/research-report-reader](https://github.com/vp24/research-report-reader) is the project repository.
 
-1. Extract the entire release ZIP. In GitHub Desktop, sign in to the account that should own the project.
-2. Choose **File → Add local repository** and select the extracted **source** folder. The release handoff includes its Git history; you do not need to create or initialize a new project.
-3. Click **Publish repository**, name it **research-report-reader**, choose the visibility you want, and publish.
-4. On GitHub, open **Actions → Verify reader**. The first push to main should run it. If repository settings require enabling Actions, enable them and choose **Run workflow**. A green run includes a **verified-website** artifact with WEBSITE-UPLOAD.zip inside.
+**Get a tested website ZIP without installing anything:**
+
+1. Open [Verify reader](https://github.com/vp24/research-report-reader/actions/workflows/verify.yml) and select a successful run for the version you want. To start one manually, choose **Run workflow** on **main**.
+2. In **Artifacts**, download **verified-website**. Unzip that download once to find **WEBSITE-UPLOAD.zip** inside.
+3. Upload **WEBSITE-UPLOAD.zip** to Cloudflare Pages using [the publishing instructions](START-HERE.txt). Give the person reading reports the resulting website link. They do not need a GitHub or ChatGPT account.
+
+To edit the existing project in GitHub Desktop, choose **File → Clone repository**, then select **vp24/research-report-reader**. The default branch is **main**.
 
 ## Future fixes
 
