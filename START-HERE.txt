@@ -1,4 +1,4 @@
-RESEARCH REPORT READER 4.6 — SESSION-ONLY WEBSITE
+RESEARCH REPORT READER 4.7 — SESSION-ONLY WEBSITE
 
 1. Extract this download.
 2. Open https://dash.cloudflare.com/ and sign in or create a Cloudflare account.

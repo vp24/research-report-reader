@@ -90,13 +90,14 @@ function renderTable(table) {
     const tr = make("tr");
     tr.append(make("th", "", row.label));
     row.values.forEach((value, index) => {
-      const td = make('td', row.cells?.[index]?.periodType === 'forecast' ? 'forecast-col' : '', row.validation === 'review-alignment' ? 'Review' : valueOrDash(value));
+      const cell=row.cells?.[index], validity=cell?.validation || row.cellValidation?.[index] || row.validation;
+      const displayed=validity==='review-alignment'?'Review':value==null?'Not captured':valueOrDash(value);
+      const td=make('td', cell?.periodType==='forecast'?'forecast-col':'', displayed);
       tagYear(td,table.columnMeta?.[index]?.year);
       if(periods[index].mixed){const m=rowPeriod(table,row,index);
         td.append(make('small','row-period',[periodLabel(m.period),m.estimateSource].filter(Boolean).join(' · ')));}
-      const cell = row.cells?.[index];
       if (cell) td.title = [cell.raw, cell.unit, cell.basis !== 'not specified' && cell.basis, cell.periodType, cell.modelDate && `Model ${cell.modelDate}`, cell.sourcePage && `Page ${cell.sourcePage}`, cell.validation].filter(Boolean).join(' · ');
-      if(cell?.sourcePage&&cell?.reportType){td.tabIndex=0;td.setAttribute('role','button');td.setAttribute('aria-label',`${row.label}, ${table.columns[index]}: ${valueOrDash(value)}. View source.`);td.dataset.sourceType=cell.reportType;td.dataset.sourcePage=cell.sourcePage;td.dataset.evidence=JSON.stringify({metric:row.label,period:table.columns[index],raw:cell.raw,unit:cell.unit,basis:cell.basis,kind:cell.periodType,estimateSource:cell.estimateSource,variant:cell.variant,modelDate:cell.modelDate,sourceBounds:cell.sourceBounds,status:cell.validation==='review-alignment'?'Ambiguous row alignment; verify the original':cell.status==='source-missing'?'The report prints a dash or N/A':cell.status==='nil'?'Nil (as reported)':cell.status==='not-meaningful'?'Not meaningful (as reported)':cell.status==='not-captured'?'No value extracted':cell.status==='unresolved'?'Unresolved format; preserved as printed':`${cell.status}; ${cell.validation}`});}
+      if(cell?.sourcePage&&cell?.reportType){td.tabIndex=0;td.setAttribute('role','button');td.setAttribute('aria-label',`${row.label}, ${table.columns[index]}: ${displayed}. View source.`);td.dataset.sourceType=cell.reportType;td.dataset.sourcePage=cell.sourcePage;td.dataset.evidence=JSON.stringify({metric:row.label,period:table.columns[index],raw:cell.raw,unit:cell.unit,basis:cell.basis,kind:cell.periodType,estimateSource:cell.estimateSource,variant:cell.variant,modelDate:cell.modelDate,sourceBounds:cell.sourceBounds,sourcePrecision:cell.sourcePrecision,status:cell.validation==='review-alignment'?'Ambiguous alignment; verify the original':cell.status==='source-missing'?'The report prints a dash or N/A':cell.status==='nil'?'Nil (as reported)':cell.status==='not-meaningful'?'Not meaningful (as reported)':cell.status==='not-captured'?'No value extracted':cell.status==='unresolved'?'Unresolved format; preserved as printed':`${cell.status}; ${cell.validation}`});}
       tr.append(td);
     });
     tbody.append(tr);

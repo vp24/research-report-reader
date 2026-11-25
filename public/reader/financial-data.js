@@ -1,6 +1,7 @@
+import {cellEvidence} from './cell-evidence.js';
 // Source values are lossless. A display dash, Nil, NM and a numeric zero are
 // different states; ranges must never be reduced to their first endpoint.
-export const PARSER_VERSION = '4.6.0';
+export const PARSER_VERSION = '4.7.0';
 export const compact = value => String(value ?? '').replace(/\s+/g, ' ').trim();
 export const keyFor = value => compact(value).toLowerCase().replace(/\$/g, ' dollar ').replace(/%/g, ' percent ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const atom = '(?:[+−-]?(?:[$€£¥])?(?:\\d[\\d,]*(?:\\.\\d+)?|\\.\\d+)(?:[BMKT]|%|x)?|\\((?:[$€£¥])?(?:\\d[\\d,]*(?:\\.\\d+)?|\\.\\d+)(?:[BMKT]|%)?\\))';
@@ -53,7 +54,7 @@ export function attachProvenance(report, tables = report.tables || []) {
           fiscalYear: column.year || (/^\d{4}$/.test(column.label) ? column.label : null), quarter: column.quarter || null,
           estimateSource: column.estimateSource || (column.period === 'forecast' ? report.provider || 'Argus' : null),
           variant: column.variant || null, modelDate: column.variant === 'prior' ? table.priorAsOf : table.asOf || null,
-          validation: row.validation || 'aligned', sourceBounds: row.bounds || null });
+          validation: row.cellValidation?.[i] || row.validation || 'aligned', ...cellEvidence(row,i) });
       });
       report.observations.push(...row.cells);
     });

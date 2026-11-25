@@ -1,5 +1,6 @@
 import { positionedLines } from './pdf-document.js';
 import { compact, keyFor, VALUE_PATTERN, unitFor } from './financial-data.js';
+import { printedBounds, chartAssignments } from './cell-evidence.js';
 
 const center = item => item.x + item.width / 2;
 const end = item => item.x + item.width;
@@ -57,16 +58,17 @@ export function readAlignedRows(page, schema, options = {}) {
       const localGap = Math.min(columns[index + 1] ? columns[index + 1].x - columns[index].x : spacing,
         columns[index - 1] ? columns[index].x - columns[index - 1].x : spacing);
       if (distances[index] > localGap * .49) { ambiguous = true; continue; }
-      buckets[index].push(item.text);
+      buckets[index].push(item);
     }
     buckets.forEach((items, i) => {
-      const raw = compact(items.join(' '));
+      const raw = compact(items.map(i=>i.text).join(' '));
       if (raw && VALUE_PATTERN.test(raw)) values[i] = raw;
       else if (items.length) ambiguous = true;
     });
     // A shifted row must not attach its first number to an unrelated year.
     if (numeric.length === columns.length && values.some(v => v == null)) ambiguous = true;
     const row = { key: keyFor(label), label, values: ambiguous ? columns.map(() => null) : values,
+      cellBounds:buckets.map((bucket,i)=>!ambiguous&&values[i]!=null?printedBounds(bucket):null),
       rawValues: numeric.map(i => i.text), sourcePage: page.number,
       validation: ambiguous ? 'review-alignment' : values.some(v => v == null) ? 'incomplete' : 'aligned',
       unit: unitFor(label, schema.unitContext), bounds: { left: schema.left, top: line.y - Math.max(...line.items.map(i => i.height || 8)), right: schema.right, bottom: line.y + 2 } };
@@ -134,11 +136,6 @@ export function discoverTables(document, type) {
   return { tables, issues };
 }
 
-function colorAt(page, x, y) {
-  const candidates = (page.rectangles || []).filter(r => r.left <= x && r.right >= x && r.top <= y && r.bottom >= y && r.alpha > 0);
-  return candidates.sort((a, b) => (a.right - a.left) * (a.bottom - a.top) - (b.right - b.left) * (b.bottom - b.top))[0]?.color;
-}
-
 export function discoverMarketData(document) {
   for (const page of document.pages || []) {
     const quarterLine = page.lines.find(l => l.items.filter(i => /^Q\d+$/.test(i.text)).length >= 2);
@@ -152,45 +149,64 @@ export function discoverMarketData(document) {
     if (group.length) qgroups.push(group);
     if (qgroups.length !== years.length) return { tables: [], issues: [{ sourcePage: page.number, reason: 'Quarter groups could not be aligned to fiscal year headings.' }] };
     const labelX = Math.min(...quarterLine.items.map(i => i.x));
-    const bounds = qgroups.map((g, i) => ({ left: i ? (end(qgroups[i - 1].at(-1)) + g[0].x) / 2 : g[0].x - (center(g[1] || g[0]) - center(g[0])) / 2,
-      right: i < qgroups.length - 1 ? (end(g.at(-1)) + qgroups[i + 1][0].x) / 2 : end(g.at(-1)) + (center(g[1] || g[0]) - center(g[0])) / 2 }));
+    const bounds = qgroups.map((g, i) => ({ left: i ? (end(qgroups[i - 1].at(-1)) + g[0].x) / 2 : g[0].x - (center(qItems[1]) - center(qItems[0])) / 2,
+      right: i < qgroups.length - 1 ? (end(g.at(-1)) + qgroups[i + 1][0].x) / 2 : end(g.at(-1)) + (center(qItems.at(-1)) - center(qItems.at(-2))) / 2 }));
     const right = bounds.at(-1).right;
     const local = positionedLines(page.items, { left: labelX - 2, right, bottom: quarterLine.y });
-    const annualRows = [], quarterRows = [];
+    const annualRows = [], quarterRows = [], issues=[];
+    const quarterBands=qItems.map((q,i)=>({left:i?(center(qItems[i-1])+center(q))/2:bounds[0].left,
+      right:i+1<qItems.length?(center(q)+center(qItems[i+1]))/2:right}));
+    function chartRow(label,kind,assignment,columnMeta){
+      const {located, ...series}=assignment;
+      const missing=columnMeta.filter((c,i)=>series.cellValidation[i]==='not-captured').map(c=>c.label);
+      const ambiguous=columnMeta.filter((c,i)=>series.cellValidation[i]==='review-alignment').map(c=>c.label);
+      if(missing.length||ambiguous.length)issues.push({sourcePage:page.number,section:kind,metric:label,
+        reason:[missing.length&&'No value captured for '+missing.join(', '),ambiguous.length&&'Ambiguous label placement for '+ambiguous.join(', ')].filter(Boolean).join('; ')+'. Check the original chart.',
+        rawValues:ambiguous.length?series.rawValues:[]});
+      return {key:keyFor(label),label,...series,columnMeta,sourcePage:page.number};
+    }
     let fiscalEnd = yearLine.items.filter(i => i.x < qItems[0].x && !/^\d{4}$/.test(i.text)).map(i => i.text).join(' ');
     for (const annualLine of local.filter(l => l.items.some(i => /^Annual$/i.test(i.text)))) {
       const annualNumbers = annualLine.items.filter(i => VALUE_PATTERN.test(compact(i.text)));
-      if (annualNumbers.length !== years.length) continue;
       const metricLabel = [...local].reverse().find(l => l.y < annualLine.y && l.items[0]?.x < qItems[0].x
-        && l.items.length <= 3 && captionLike(l.text) && !/^(?:Rating|Annual|Quarterly)/i.test(l.text));
+        && l.items.length <= 3 && !/^\(.*\)$/.test(l.text) && captionLike(l.text) && !/^(?:Rating|Annual|Quarterly)/i.test(l.text));
       if (!metricLabel) continue;
-      const unitsLine = local.find(l => l.y > metricLabel.y && l.y < annualLine.y && /^\(/.test(l.text));
+      const unitsLine = local.find(l => l.y > metricLabel.y && l.y < annualLine.y && l.items.every(item=>end(item)<qItems[0].x) && /^\([^)]+\)$/.test(l.text) && !VALUE_PATTERN.test(l.text));
       const label = compact(metricLabel.text + (unitsLine ? ` ${unitsLine.text}` : ''));
       const estimates = annualLine.items.filter(i => /Estimate/i.test(i.text));
+      const actualMarks=annualLine.items.filter(i=>/\bActual\b/i.test(i.text));
       const estimateColors = new Set();
       for (const mark of estimates) {
         const swatch = (page.rectangles || []).filter(r => r.right <= mark.x + mark.width && r.left >= mark.x - 12 && r.top < mark.y && r.bottom > mark.y - mark.height && r.right - r.left < 12).sort((a, b) => b.left - a.left)[0];
         if (swatch) estimateColors.add(swatch.color);
       }
+      const yearMarks=estimates.filter(m=>bounds.some(b=>m.x>=b.left && m.x<b.right));
       const annualMeta = years.map((year, i) => ({ label: year.text, year: year.text,
-        period: estimates.some(m => m.x >= bounds[i].left && m.x < bounds[i].right) ? 'forecast' : 'actual' }));
-      const qnumbers = page.items.filter(i => i.y > (unitsLine?.y || metricLabel.y) && i.y < annualLine.y - 2 && i.x >= bounds[0].left && i.x < right && VALUE_PATTERN.test(compact(i.text))).sort((a, b) => a.x - b.x);
-      if (qnumbers.length !== qItems.length) continue;
-      const quarterlyMeta = qgroups.flatMap((g, i) => g.map((q, j) => {
-        const num = qnumbers[qgroups.slice(0, i).reduce((n, items) => n + items.length, 0) + j];
-        const bar = (page.rectangles || []).filter(r => r.left <= center(num) && r.right >= center(num) && r.top >= metricLabel.y - metricLabel.items[0].height && r.bottom < annualLine.y && r.right - r.left < (right - bounds[0].left) / qItems.length * 1.2 && r.bottom - r.top > 0).sort((a, b) => (b.bottom - b.top) - (a.bottom - a.top))[0];
-        const color = bar?.color || colorAt(page, center(num), num.y - num.height * .4);
-        const period = estimateColors.has(color) ? 'forecast' : annualMeta[i].period === 'actual' ? 'actual'
-          : color && estimateColors.size ? 'actual' : 'not specified';
-        return { label: `${years[i].text} ${q.text}`, year: years[i].text, quarter: q.text, period };
-      }));
-      annualRows.push({ key: keyFor(label), label, values: annualNumbers.map(i => i.text), columnMeta: annualMeta, sourcePage: page.number });
-      quarterRows.push({ key: keyFor(label), label, values: qnumbers.map(i => i.text), columnMeta: quarterlyMeta, sourcePage: page.number });
+        period: yearMarks.some(m => m.x >= bounds[i].left && m.x < bounds[i].right) ? 'forecast' :
+          (yearMarks.length||actualMarks.some(m=>m.x>=bounds[i].left&&m.x<bounds[i].right))?'actual':'not specified' }));
+      const qnumbers = page.items.filter(i => i.y > (unitsLine?.y || metricLabel.y) && i.y < annualLine.y - 2 && center(i)>=bounds[0].left && center(i)<right && VALUE_PATTERN.test(compact(i.text))).sort((a, b) => a.x - b.x);
+      const annual=chartAssignments(annualNumbers,bounds),quarterly=chartAssignments(qnumbers,quarterBands);
+      if(!annualNumbers.length&&!qnumbers.length)continue;
+      const quarterKeys=qgroups.flatMap((g,i)=>g.map(q=>({q,yearIndex:i})));
+      const barColors=quarterKeys.map(({q},k)=>{
+        const x=center(quarterly.located[k] || q);
+        const bar=(page.rectangles || []).filter(r=>r.alpha!==0&&r.left<=x&&r.right>=x&&r.top>=metricLabel.y-metricLabel.items[0].height&&r.bottom<annualLine.y&&r.right-r.left<(right-bounds[0].left)/qItems.length*1.2&&r.bottom-r.top>0)
+          .sort((a,b)=>(b.bottom-b.top)-(a.bottom-a.top))[0];
+        return bar?.color;
+      });
+      const actualColors=new Set(barColors.filter((c,k)=>c&&!estimateColors.has(c)&&annualMeta[quarterKeys[k].yearIndex].period==='actual'));
+      const quarterlyMeta=quarterKeys.map(({q,yearIndex:i},k)=>{
+        const color=barColors[k],period=estimateColors.has(color)?'forecast'
+          :annualMeta[i].period==='actual'||actualColors.has(color)?'actual':'not specified';
+        return {label:`${years[i].text} ${q.text}`,year:years[i].text,quarter:q.text,period};
+      });
+      annualRows.push(chartRow(label,'Annual chart',annual,annualMeta));
+      quarterRows.push(chartRow(label,'Quarterly chart',quarterly,quarterlyMeta));
     }
     if (!annualRows.length) continue;
     const make = (id, title, rows) => ({ id, title: `${title}${fiscalEnd ? ` · FY ends ${fiscalEnd}` : ''}`, columns: rows[0].columnMeta.map(c => c.label), columnMeta: rows[0].columnMeta,
       rows, found: true, sourcePage: page.number, fiscalYearEnd: fiscalEnd || null, basis: 'not specified', note: 'Chart labels and fiscal periods are reproduced as printed; chart earnings may differ from historical GAAP data.' });
-    return { tables: [make('analyst-annual-market-data', 'Annual forecasts', annualRows), make('analyst-quarterly-market-data', 'Quarterly forecasts', quarterRows)], issues: [] };
+    return { tables: [make('analyst-annual-market-data', 'Annual forecasts', annualRows), make('analyst-quarterly-market-data', 'Quarterly forecasts', quarterRows)], issues };
   }
   return { tables: [], issues: [] };
 }

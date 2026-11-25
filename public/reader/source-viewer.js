@@ -10,7 +10,25 @@ export function createSourceViewer(pdfjs, dialog) {
   let sources = [], external = null, loading = null, pdf = null, renderTask = null;
   let documentToken = 0, paintToken = 0, pageNumber = 1;
   let lastWidth = 0;
-  let evidenceBounds=null,evidencePage=null,evidenceIndex=null;
+  let evidenceBounds=null,evidencePage=null,evidenceIndex=null,evidencePrecision=null;
+  function hasSelection(){return evidencePanel.childElementCount>0 && pageNumber===evidencePage && select.selectedIndex===evidenceIndex;}
+  function hasBox(b){return b&&[b.left,b.top,b.right,b.bottom].every(Number.isFinite)&&b.right>b.left&&b.bottom>b.top;}
+  function showLocation(scale,pixels) {
+    // A value can be near the far right or bottom of a zoomed page.
+    // Work in CSS pixels for scrolling, physical canvas pixels for drawing.
+    const b=hasSelection()&&evidenceBounds;
+    if(!hasBox(b)){viewport.scrollTo({left:0,top:0});return;}
+    const ctx=canvas.getContext('2d'),factor=scale*pixels;
+    ctx.save();
+    ctx.setTransform(factor,0,0,factor,0,0);
+    ctx.fillStyle='rgba(28,112,163,.15)';ctx.fillRect(b.left,b.top,b.right-b.left,b.bottom-b.top);
+    ctx.strokeStyle='#155e83';ctx.lineWidth=1.5/scale;
+    ctx.strokeRect(b.left-1,b.top-1,b.right-b.left+2,b.bottom-b.top+2);ctx.restore();
+    const frame=viewport.getBoundingClientRect(),paper=canvas.getBoundingClientRect();
+    const left=paper.left-frame.left-viewport.clientLeft+viewport.scrollLeft+(b.left+b.right)*scale/2-viewport.clientWidth/2;
+    const top=paper.top-frame.top-viewport.clientTop+viewport.scrollTop+(b.top+b.bottom)*scale/2-viewport.clientHeight/2;
+    viewport.scrollTo({left:evidencePrecision==='value'?Math.max(0,left):0,top:Math.max(0,top)});
+  }
   const labels = {morningstar:'Morningstar', 'argus-analyst':'Argus Analyst', 'argus-a6':'Argus A6', 'argus-options':'Argus Options'};
   const quiet = promise => promise?.catch?.(() => {});
   const errorText = error => error?.message || 'The PDF page could not be displayed.';
@@ -56,11 +74,7 @@ export function createSourceViewer(pdfjs, dialog) {
       await task.promise;
       if (token !== paintToken || docToken !== documentToken) return;
       renderTask = null; canvas.hidden = false;
-      if(!evidencePanel.hidden&&evidenceBounds&&pageNumber===evidencePage&&select.selectedIndex===evidenceIndex){
-        const b=evidenceBounds,ctx=canvas.getContext('2d'),factor=scale*pixels;
-        if([b.left,b.top,b.right,b.bottom].every(Number.isFinite)&&b.right>b.left&&b.bottom>b.top){ctx.save();ctx.fillStyle='rgba(63,128,185,0.16)';ctx.fillRect(b.left*factor,b.top*factor,(b.right-b.left)*factor,(b.bottom-b.top)*factor);ctx.restore();}
-      }
-      status.hidden = true; viewport.scrollTo({top:0,left:0});
+      status.hidden=true; evidencePanel.hidden=!hasSelection(); showLocation(scale,pixels);
       dialog.dataset.renderedPage = String(pageNumber);
       text.textContent = 'Loading page text…';
       try {
@@ -120,7 +134,7 @@ export function createSourceViewer(pdfjs, dialog) {
     try { await external(select.selectedIndex, pageNumber); }
     catch (error) { status.hidden=false; status.className='source-viewer-error'; status.textContent=errorText(error); }
   };
-  dialog.addEventListener('close', () => { if (dialog.open) return; release(); sources=[]; external=null; });
+  dialog.addEventListener('close', () => { if (dialog.open) return; release(); sources=[]; external=null; evidenceBounds=null; evidencePage=null; evidenceIndex=null; evidencePrecision=null; evidencePanel.replaceChildren(); evidencePanel.hidden=true; });
   dialog.querySelectorAll('[data-source-view]').forEach(button => button.onclick = () => {
     const textView = button.dataset.sourceView === 'text';
     $('source-text-wrap').hidden = !textView;
@@ -136,8 +150,8 @@ export function createSourceViewer(pdfjs, dialog) {
     open(documents, index = 0, page = 1, onExternal = null, evidence = null) {
       if (dialog.open) dialog.close();
       sources = documents; external = onExternal;
-      evidencePanel.replaceChildren();evidencePanel.hidden=!evidence;evidenceBounds=evidence?.sourceBounds || null;evidencePage=Number(page);evidenceIndex=index;
-      if(evidence){const heading=doc.createElement('strong');heading.textContent=evidence.metric || 'Selected value';evidencePanel.append(heading);const list=doc.createElement('dl');for(const [key,label]of [['raw','As printed'],['figureDate','Figure date'],['period','Period'],['kind','Period type'],['unit','Units'],['basis','Accounting basis'],['estimateSource','Forecast source'],['variant','Revision variant'],['modelDate','Model date'],['reportDate','Report date'],['status','Extraction status']]){if(evidence[key]==null||evidence[key]==='')continue;const term=doc.createElement('dt'),value=doc.createElement('dd');term.textContent=label;value.textContent=String(evidence[key]);list.append(term,value);}evidencePanel.append(list);const note=doc.createElement('small');note.textContent='Check the row and column on the original page below. '+(evidenceBounds?'The source area is highlighted for reference. ':'')+'A source link is evidence, not a guarantee of correct extraction.';evidencePanel.append(note);}
+      evidencePanel.replaceChildren();evidencePanel.hidden=!evidence;evidenceBounds=evidence?.sourceBounds || null;evidencePage=Number(page);evidenceIndex=index;evidencePrecision=evidence?.sourcePrecision || (hasBox(evidenceBounds)?'row':'page');
+      if(evidence){const heading=doc.createElement('strong');heading.textContent=evidence.metric || 'Selected value';evidencePanel.append(heading);const list=doc.createElement('dl');for(const [key,label]of [['raw','As printed'],['figureDate','Figure date'],['period','Period'],['kind','Period type'],['unit','Units'],['basis','Accounting basis'],['estimateSource','Forecast source'],['variant','Revision variant'],['modelDate','Model date'],['reportDate','Report date'],['status','Extraction status']]){if(evidence[key]==null||evidence[key]==='')continue;const term=doc.createElement('dt'),value=doc.createElement('dd');term.textContent=label;value.textContent=String(evidence[key]);list.append(term,value);}evidencePanel.append(list);const note=doc.createElement('small');note.textContent=hasBox(evidenceBounds)?(evidencePrecision==='value'?'The printed value is highlighted on the original PDF.':'The source row is highlighted. Check the period against the column heading.'):'This link opens the source page. The exact location of the figure could not be identified.';evidencePanel.append(note);}
       select.replaceChildren(...sources.map(source => {
         const option = doc.createElement('option'); option.textContent=labels[source.type] || source.name; return option;
       }));
