@@ -82,7 +82,10 @@ function renderTable(table) {
   const periods=tablePeriods(table);
   table.columns.forEach((column, index) => {
     const {period,mixed}=periods[index];
-    headRow.append(tagYear(make('th', period === 'forecast' ? 'forecast-col' : '', `${column}${mixed ? ' · By row' : period === 'forecast' ? ' · Est.' : period === 'actual' ? ' · Actual' : ''}`),table.columnMeta?.[index]?.year));
+    const suffix=mixed?' · By row':period==='forecast'?' · Est.':period==='actual'?' · Actual':period==='not specified'?' · Type unclear':'';
+    const head=tagYear(make('th',period==='forecast'?'forecast-col':'',column+suffix),table.columnMeta?.[index]?.year);
+    if(!mixed&&period==='not specified')head.title='The PDF does not establish whether this period is actual or estimated.';
+    headRow.append(head);
   });
   thead.append(headRow);
   const tbody = make("tbody");

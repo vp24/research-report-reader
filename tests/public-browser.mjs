@@ -100,12 +100,13 @@ try{
  checks.push('The A6 quantitative target opens the A6 PDF, with its printed value.');
  checks.push('Three Argus PDFs with identical filenames: add one, attach two later, keep both targets and the quoted price’s true source.');
  await page.reload();await page.locator('#empty-open-argus').click();
- const chooseChart=page.waitForEvent('filechooser');await page.locator('#argus-add-files').click();await(await chooseChart).setFiles({name:'Chart.pdf',mimeType:'application/pdf',buffer:chartExample({collision:true})});
+ const chooseChart=page.waitForEvent('filechooser');await page.locator('#argus-add-files').click();await(await chooseChart).setFiles({name:'Chart.pdf',mimeType:'application/pdf',buffer:chartExample({collision:true,marked:false})});
  await page.locator('#argus-open-report').click();await opened(1);
  const quarterCell=(quarter)=>page.locator('#argus-report-view td[data-evidence]').filter({visible:true}).and(page.locator('[aria-label*="2041 '+quarter+':"]')).first();
  const anyQuarter=page.locator('#argus-report-view td[aria-label*="2041 Q1:"]').first();
  await anyQuarter.waitFor({state:'attached'});
  await anyQuarter.evaluate(e=>{for(let p=e.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;});
+ assert.ok(await page.locator('#argus-forecasts').getByRole('columnheader',{name:'2041 Q1 · Type unclear',exact:true}).isVisible());
  assert.equal(await quarterCell('Q1').innerText(),'10.01');assert.equal(await quarterCell('Q2').innerText(),'Not captured');
  assert.equal(await quarterCell('Q3').innerText(),'Review');await quarterCell('Q3').click();
  await page.waitForFunction(()=>document.querySelector('#source-viewer').dataset.renderedPage==='1');
