@@ -1,3 +1,4 @@
+import {cellEvidence} from './cell-evidence.js';
 import {morningstarHeadlines} from './headline-evidence.js';
 import {identifySourceTables,collectMetric} from './priority-sections.js';
 import { morningstarTables } from './morningstar-layout.js';
@@ -844,9 +845,9 @@ function metricFromTable({model,table:selectedTable,row,id,label,unit,sourcePage
       value: row.values[index] ?? null,
       sourcePage: row.sourcePage || selectedTable.sourcePage || sourcePage || null,
       sourceLabel: row.label,
-      sourceBounds: row.bounds || null,
+      ...cellEvidence(row,index),
       basis: row.basis || accountingBasis(row.label,selectedTable.basis || selectedTable.unitContext),
-      validation: row.validation || 'not independently validated',
+      validation: row.cellValidation?.[index] || row.validation || 'not independently validated',
       modelDate: selectedTable.asOf || null
     })),
     values: {
@@ -873,7 +874,7 @@ function revisionMetric(table,row,id,label,unit,sourcePage=null){
     sourceUnit: row.unit || unitFor(row.label) || null,
     modelDate:table.asOf || null,priorModelDate:table.priorAsOf || null,fiscalEnd:table.fiscalYearEnd || null,
     sources:[{tableId:table.id,rowKey:row.key,page:row.sourcePage || table.sourcePage || sourcePage}],
-    pairSources:Object.fromEntries(pairs.map(({year})=>[year,{page:row.sourcePage || table.sourcePage || sourcePage,bounds:row.bounds || null,validation:row.validation,modelDate:table.asOf || null,priorModelDate:table.priorAsOf || null}])),
+    pairSources:Object.fromEntries(pairs.map(({year})=>[year,{page:row.sourcePage || table.sourcePage || sourcePage,bounds:row.bounds || null,current:cellEvidence(row,table.columns.findIndex(c=>c.year===year&&c.variant==='current')),prior:cellEvidence(row,table.columns.findIndex(c=>c.year===year&&c.variant==='prior')),validation:row.validation,modelDate:table.asOf || null,priorModelDate:table.priorAsOf || null}])),
     sourcePage: row.sourcePage || table.sourcePage || sourcePage || null,
     sourceLabel: row.label,
     sourceBounds: row.bounds || null,

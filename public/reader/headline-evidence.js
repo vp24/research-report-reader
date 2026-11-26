@@ -43,7 +43,7 @@ export function morningstarHeadlines(doc) {
      const date=ok?nearby.find(v=>v.y>first.y&&printedDate.test(v.text))?.text:null;
      const bits=first?.items||[],box=bits.length?{left:Math.max(left,bits[0].x-1),right:Math.min(right,Math.max(...bits.map(v=>v.x+v.width))+1),top:Math.min(...bits.map(v=>v.y-v.height))-1,bottom:Math.max(...bits.map(v=>v.y))+2}:null;
      output[a.key]={metric:a.label,raw:ok?raw:null,value:ok?(a.key==='equityStyleBox'?raw.replace(/^[1-9]\s+/,''):raw):null,
-       date:date||null,sourcePage:page.number,sourceBounds:ok?box:null,status:!ok?'check source':missing.test(raw)?'source-missing':'label-aligned'};
+       date:date||null,sourcePage:page.number,sourceBounds:ok?box:null,sourcePrecision:ok&&box?'value':'page',status:!ok?'check source':missing.test(raw)?'source-missing':'label-aligned'};
    }
    return output;
  }

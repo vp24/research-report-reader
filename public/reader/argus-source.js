@@ -1,3 +1,4 @@
+import {printedBounds} from './cell-evidence.js';
 import { compact, keyFor, financialValue, VALUE_PATTERN, PARSER_VERSION } from './financial-data.js';
 import { positionedLines } from './pdf-document.js';
 
@@ -10,8 +11,9 @@ export function sourceFacts(document) {
       if (VALUE_PATTERN.test(label.text) || value.x - label.x - label.width < 2 || value.x <= label.x) continue;
       const categorical=i===line.items.length-2&&label.x>=page.width*.5&&label.width<page.width*.35&&value.x>=page.width*.55&&value.x+value.width>=page.width*.85&&value.x-label.x-label.width>label.height*2&&/^[A-Za-z][A-Za-z /&.-]{1,65}$/.test(value.text);
       if (!VALUE_PATTERN.test(value.text) && !/^(?:[$€£¥][\d,.−-]+\s+(?:[BMKT]|billion|million|trillion)|[\d,.]+\s+(?:thousand|million|billion|trillion)|BUY|SELL|HOLD|HIGH|MEDIUM|LOW|OVER\s+WEIGHT|MARKET\s+WEIGHT|UNDER\s+WEIGHT)$/i.test(value.text)&&!categorical) continue;
+      const box=printedBounds([value]);
       facts.push({ metric: compact(label.text).replace(/:$/, ''), raw: value.text, value: financialValue(value.text).value,
-        sourcePage: page.number, sourceBounds: { left: label.x, top: label.y - label.height, right: value.x + value.width, bottom: value.y },
+        sourcePage: page.number, sourceBounds: box, sourcePrecision: box?'value':'page',
         // A number followed by more numeric columns belongs to a series. A
         // scalar summary must not grab its first historical year as a headline.
         layout: line.items[i+2] && VALUE_PATTERN.test(line.items[i+2].text) ? 'series' : 'pair',
@@ -128,7 +130,7 @@ export function discoverOptionTables(document) {
           const label = compact([pending, ...line.items.slice(0, -1).map(i => i.text)].filter(Boolean).join(' '));
           const next = local[i + 1];
           const wrap = pending && next && next.items.length === 1 && next.items[0].x < last.x && next.y - line.y < 12 && !VALUE_PATTERN.test(next.text);
-          rows.push({ key: keyFor(label + (wrap ? ` ${next.text}` : '')), label: label + (wrap ? ` ${next.text}` : ''), values: [last.text], sourcePage: page.number });
+          rows.push({ key: keyFor(label + (wrap ? ` ${next.text}` : '')), label: label + (wrap ? ` ${next.text}` : ''), values: [last.text], cellBounds: [printedBounds([last])], sourcePage: page.number });
           if (wrap) i++;
           pending = '';
         } else if (line.items.length === 1 && line.text.length < 75) pending = line.text;

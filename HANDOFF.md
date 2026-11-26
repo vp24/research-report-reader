@@ -1,11 +1,11 @@
 # Read first for the next change
 
-Current release: 4.6.0, session-only static website. This supersedes v4.3's
+Current release: 4.7.0, session-only static website. This supersedes v4.3's
 Node/SQLite account-and-library architecture at the user's explicit request.
 The user wants a simple public link, free/cheap hosting, phone and desktop use,
 and no programmer setup for readers. Long-term report saving is no longer needed.
 
-Project source: [vp24/research-report-reader](https://github.com/vp24/research-report-reader), branch **main**. Start future changes from the current repository. The packaged 4.6 handoff is an offline snapshot.
+Project source: [vp24/research-report-reader](https://github.com/vp24/research-report-reader), branch **main**. Start future changes from the current repository. Deploy the website ZIP from a successful build, or package the public directory locally.
 
 ## Architecture
 
@@ -20,7 +20,8 @@ Project source: [vp24/research-report-reader](https://github.com/vp24/research-r
 - pdf-document.js: distinguish actual text from generated page markers; flag unreadable pages and keep the original available.
 - argus-import.js: stage 1–3 sources, validate, then open; add other types later.
 - report-comparison.js: source/basis/period-aware comparisons within this tab.
-- source-viewer.js: PDF.js canvas and exact original page/row evidence.
+- cell-evidence.js: bounds from printed tokens, per-period chart alignment, and explicit value / row / page precision. Never infer an exact value location from a header.
+- source-viewer.js: highlight the applicable printed figure, row or page and center it at the selected zoom.
 - parser.js, argus-parser.js, argus-source.js, morningstar-layout.js,
   layout-tables.js, financial-data.js, display-values.js: existing accuracy logic.
 - public/_headers, _redirects: Cloudflare Pages static deployment configuration.

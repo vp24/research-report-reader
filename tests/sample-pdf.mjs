@@ -15,6 +15,16 @@ export function pdfFromPages(pages){
  return Buffer.from(file);
 }
 export const sampleYears=['2034','2035','2036','2037','2038','2039','2040'];
+// A compact, original per-quarter chart. Its annual labels and individual bars
+// are independent. A missing label must not move the others to another period.
+export function chartExample({quarterGap=false,annualGap=false,collision=false,marked=true}={}){
+ const x=[171,213,255,321,363,405],quarters=['Q1','Q2','Q3','Q1','Q2','Q3'];
+ const q=['10.01','11.02','12.03','(1.40)','0','N/A'];
+ return pdfFromPages([[[34,755,'Argus Analyst Report'],[34,731,'Imaginary Tools'],[315,731,'(NYSE: IMTL)'],[34,711,'Report Created May 05, 2042'],
+  [34,651,'EPS'],[34,634,'(EUR)'],...q.flatMap((v,i)=>i===1&&(quarterGap||collision)?[]:[[x[i],621-(i%2)*8,v]]),
+  ...(collision?[[x[2],603,'71.80']]:[]),[34,587,'Annual'],...(annualGap?[]:[[208,587,'120.50']]),[349,587,'128.00'],...(marked?[[396,587,'Estimate']]:[]),
+  [34,568,'FY ends'],...quarters.map((s,i)=>[x[i],568,s]),[34,550,'31 Mar'],[205,550,'2041'],[355,550,'2042']]]);
+}
 export const sampleRevenue=['11.20','12.30','0','(1.25)','N/A','15.60','17.80'];
 const series=(label,values,y)=>[[32,y,label],...values.map((v,i)=>[234+50*i,y,v])];
 export function sampleMorningstar(){return pdfFromPages([

@@ -1,3 +1,9 @@
+# 4.7.0 — November 25, 2026
+
+- An unreadable Argus chart label no longer removes valid annual totals or the other quarters. A duplicate in one period cannot fill a gap in another. Conflicts and missing captures remain distinct from a printed zero or N/A in the reader and text export.
+- Quarters with no reliable actual/estimate indication retain their numbers but are left unclassified. A previously unseen bar color in a mixed year is not enough to call the value actual.
+- Tapping a measured Morningstar or Argus figure brings its printed value into view, including on a zoomed phone. Current and previous revisions retain separate positions. The viewer identifies row or page evidence explicitly when it cannot locate a precise value.
+
 # 4.6.0 — November 25, 2026
 
 - Morningstar priority tables retain later years when sections repeat on another page. Current and previous revisions keep their original dates, pages and values. Incompatible scales, editions and conflicting rows remain separate.

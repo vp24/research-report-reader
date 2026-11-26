@@ -1,9 +1,11 @@
-# Research Report Reader 4.6
+# Research Report Reader 4.7
 
 A public, static Morningstar and Argus PDF reader for phones and computers.
 It surfaces source financials, forecasts, targets and analyst reasoning, retaining
 historical years, units, actual/forecast labels and distinctions between sources.
 It does not generate an independent investment recommendation. Opening a report shows all years. On a phone, choose a fiscal year to see it across metrics, then tap a figure to verify the printed value, page and date when available. Saving a text summary includes all periods, even while a single year is selected.
+
+If a chart misses a number, the other quarters and annual totals stay visible. “Not captured” means the reader found no value at that position; “Review” flags conflicting placement. A printed zero, dash or N/A keeps its original meaning. When you tap a value, the PDF viewer highlights the printed figure if its position is known.
 
 [Build checks and website download](https://github.com/vp24/research-report-reader/actions/workflows/verify.yml) · [Report an extraction error](https://github.com/vp24/research-report-reader/issues/new?template=reading-discrepancy.yml)
 

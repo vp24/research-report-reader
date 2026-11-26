@@ -532,7 +532,7 @@ function renderMetricGroup(group) {
       const cell=make("td", `${columnClasses(column, index, columns)}${value === "—" ? " missing-value" : ""}`, value);
       tagYear(cell,column.year);
       if (!point) cell.setAttribute("aria-label","This period is not in the source row");
-      if(point)attachEvidence(cell,{metric:point.sourceLabel || metric.label,period:column.label,kind:column.period,raw:point.value,sourcePage:point.sourcePage,sourceBounds:point.sourceBounds,validation:point.validation,basis:point.basis,unit:metric.sourceUnit || {usdMillions:'USD millions',usdPerShare:'USD per share',percent:'%',multiple:'×'}[metric.unit] || metric.unit,modelDate:point.modelDate});
+      if(point)attachEvidence(cell,{metric:point.sourceLabel || metric.label,period:column.label,kind:column.period,raw:point.value,sourcePage:point.sourcePage,sourceBounds:point.sourceBounds,sourcePrecision:point.sourcePrecision,validation:point.validation,basis:point.basis,unit:metric.sourceUnit || {usdMillions:'USD millions',usdPerShare:'USD per share',percent:'%',multiple:'×'}[metric.unit] || metric.unit,modelDate:point.modelDate});
       row.append(cell);
     });
     tbody.append(row);
@@ -583,7 +583,7 @@ function renderRevisionTable(revisions) {
         const validation=proof.validation || metric.validation;
         const value=!pair?'·':validation==='review-alignment'?'Review':pair[variant]==null?'Not captured':formatModelValue(pair[variant],metric.unit,true);
         const cell=tagYear(make('td',variant==='current'?`revision-current-column${index?'':' revision-first-year'}`:'revision-prior-column muted-cell',value),year);
-        if(pair)attachEvidence(cell,{metric:metric.sourceLabel || metric.label,period:`${year} ${variant}`,variant,kind:'forecast revision',raw:pair[variant],sourcePage:proof.page || metric.sourcePage,sourceBounds:proof.bounds || metric.sourceBounds,validation,basis:metric.basis,unit:metric.sourceUnit || metric.unit,modelDate:variant==='prior'?(proof.priorModelDate || metric.priorModelDate):(proof.modelDate || metric.modelDate)});
+        if(pair)attachEvidence(cell,{metric:metric.sourceLabel || metric.label,period:`${year} ${variant}`,variant,kind:'forecast revision',raw:pair[variant],sourcePage:proof.page || metric.sourcePage,sourceBounds:proof[variant]?.sourceBounds || proof.bounds || metric.sourceBounds,sourcePrecision:proof[variant]?.sourcePrecision || 'row',validation,basis:metric.basis,unit:metric.sourceUnit || metric.unit,modelDate:variant==='prior'?(proof.priorModelDate || metric.priorModelDate):(proof.modelDate || metric.modelDate)});
         else cell.setAttribute('aria-label','This period is not in the source row');
         row.append(cell);
       }
@@ -776,7 +776,7 @@ function renderSourceTables(report) {
     selectedColumns.forEach((column) => {
       const raw=rowData.values[column.sourceIndex],proof=rowData.cells?.[column.sourceIndex] || {};
       const cell=make('td',column.period==='forecast'?'forecast-col':'',rowData.validation==='review-alignment'?'Review':raw ?? 'Not captured');
-      attachEvidence(cell,{metric:rowData.label,raw,period:column.label,kind:column.period,variant:column.variant,basis:proof.basis,unit:proof.unit,modelDate:proof.modelDate,validation:rowData.validation,sourceBounds:rowData.bounds,sourcePage:rowData.sourcePage || active.sourcePage});row.append(cell);
+      attachEvidence(cell,{metric:rowData.label,raw,period:column.label,kind:column.period,variant:column.variant,basis:proof.basis,unit:proof.unit,modelDate:proof.modelDate,validation:proof.validation || rowData.validation,sourceBounds:proof.sourceBounds || rowData.bounds,sourcePrecision:proof.sourcePrecision,sourcePage:rowData.sourcePage || active.sourcePage});row.append(cell);
     });
     tbody.append(row);
   });

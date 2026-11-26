@@ -630,7 +630,7 @@ function appendTable(lines, table, report) {
   if(report?.label)lines.push([report.label,report.reportDate].filter(Boolean).join(' · '));
   if(table.sourcePage)lines.push(`PDF page ${table.sourcePage}`);
   lines.push(["Metric", ...table.columns.map((c,i)=>[c,meta[i].mixed?'By row':meta[i].period,meta[i].estimateSource].filter(Boolean).join(' · '))].join("\t"));
-  table.rows.forEach(row=>lines.push([row.label,...row.values.map((v,i)=>{const raw=row.validation==='review-alignment'?'Check source alignment':v ?? 'Not captured';const m=rowPeriod(table,row,i);return meta[i].mixed ? [raw,m.period || 'Period not specified',m.estimateSource].filter(Boolean).join(' · '):raw;})].join("\t")));
+  table.rows.forEach(row=>lines.push([row.label,...row.values.map((v,i)=>{const raw=(row.cellValidation?.[i] || row.validation)==='review-alignment'?'Check source alignment':v ?? 'Not captured';const m=rowPeriod(table,row,i);return meta[i].mixed ? [raw,m.period || 'Period not specified',m.estimateSource].filter(Boolean).join(' · '):raw;})].join("\t")));
 }
 
 export function buildArgusPlainTextSummary(bundle) {
