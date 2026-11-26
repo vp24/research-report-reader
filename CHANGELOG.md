@@ -1,3 +1,10 @@
+# 4.8.0 — November 26, 2026
+
+- Open a downloaded report from the phone’s file picker in one tap, including a single Argus file or several for one company. Guided import and attaching additional Argus sources remain available.
+- Read a single Morningstar or Argus forecast metric vertically, including every source period regardless of the table’s year filter. Current and prior revisions, units, missing and ambiguous values and printed sources stay separate.
+- Jump to forecasts; go from a figure to the original PDF and back without leaving the session. The welcome screen now offers an optional home-screen shortcut and can share just the public website link.
+- Add touch-browser checks with iPhone/WebKit and Android/Chromium profiles. No change to extraction rules, storage or hosting.
+
 # 4.7.0 — November 25, 2026
 
 - An unreadable Argus chart label no longer removes valid annual totals or the other quarters. A duplicate in one period cannot fill a gap in another. Conflicts and missing captures remain distinct from a printed zero or N/A in the reader and text export.

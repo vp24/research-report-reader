@@ -6,7 +6,7 @@ export function addYearFocus(root,insertBefore=null){
  const doc=root.ownerDocument;
  const tables=[...root.querySelectorAll('table')].filter(t=>t.querySelector('thead [data-fiscal-year]'));
  const years=[...new Set(tables.flatMap(t=>[...t.querySelectorAll('thead [data-fiscal-year]')].map(c=>c.dataset.fiscalYear).filter(Boolean)))].sort((a,b)=>Number(a)-Number(b));
- if(years.length<2)return;
+ if(!tables.length)return;
  const control=doc.createElement('div');control.className='year-focus-control';
  const label=doc.createElement('label');label.append(doc.createTextNode('Fiscal year'));
  const select=doc.createElement('select');select.setAttribute('aria-label','Fiscal year shown in these tables');
@@ -16,7 +16,9 @@ export function addYearFocus(root,insertBefore=null){
  label.append(select);
  const status=doc.createElement('span');status.className='year-focus-note';status.setAttribute('role','status');
  const reset=doc.createElement('button');reset.className='year-focus-reset';reset.type='button';reset.textContent='Show all years';reset.hidden=true;
- control.append(label,status,reset);root.insertBefore(control,insertBefore || root.firstChild);
+ const reader=doc.createElement('button');reader.className='metric-reader-trigger';reader.type='button';reader.textContent='Read one metric';reader.setAttribute('aria-haspopup','dialog');
+ reader.addEventListener('click',()=>root.dispatchEvent(new doc.defaultView.CustomEvent('reader:read-metric',{bubbles:true,detail:{tables,trigger:reader}})));
+ label.hidden=years.length<2;control.append(reader,label,status,reset);root.insertBefore(control,insertBefore || root.firstChild);
  const scope=++nextScope;
  const groups=tables.map((table,index)=>{
    const region=table.parentElement;region.id||='fiscal-scope-'+scope+'-'+index;

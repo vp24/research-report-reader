@@ -1,6 +1,6 @@
 # Read first for the next change
 
-Current release: 4.7.0, session-only static website. This supersedes v4.3's
+Current release: 4.8.0, session-only static website. This supersedes v4.3's
 Node/SQLite account-and-library architecture at the user's explicit request.
 The user wants a simple public link, free/cheap hosting, phone and desktop use,
 and no programmer setup for readers. Long-term report saving is no longer needed.
@@ -16,6 +16,7 @@ Project source: [vp24/research-report-reader](https://github.com/vp24/research-r
 - renderer.js: source-based reading UI and multi-report session.
 - priority-sections.js: merge compatible Morningstar continuations without mixing currencies, model dates, accounting bases, fiscal year ends, or conflicting values. Keep each cell’s page.
 - headline-evidence.js and quoted-value.js: match printed labels to values and dates; link only when a page is known.
+- metric-reader.js: reads the very same rendered source cells vertically, with exact raw figures, source PDFs and phone Back. No report values enter history or storage.
 - year-focus.js: filter the rendered cells without mutating the underlying model or export.
 - pdf-document.js: distinguish actual text from generated page markers; flag unreadable pages and keep the original available.
 - argus-import.js: stage 1–3 sources, validate, then open; add other types later.

@@ -76,6 +76,7 @@ function renderTable(table) {
   wrap.setAttribute("role", "region");
   wrap.setAttribute("aria-label", `${table.title || "Financial table"}: scroll horizontally for all periods`);
   const tableNode = make("table", "argus-data-table");
+  tableNode.dataset.seriesGroup=table.title || "Financial table";
   const thead = make("thead");
   const headRow = make("tr");
   headRow.append(make("th", "", "Metric"));
@@ -90,7 +91,7 @@ function renderTable(table) {
   thead.append(headRow);
   const tbody = make("tbody");
   table.rows.forEach((row) => {
-    const tr = make("tr");
+    const tr = make("tr");tr.dataset.seriesLabel=row.label;
     tr.append(make("th", "", row.label));
     row.values.forEach((value, index) => {
       const cell=row.cells?.[index], validity=cell?.validation || row.cellValidation?.[index] || row.validation;
@@ -436,6 +437,9 @@ export function renderArgusReport(root, bundle, { onToast } = {}) {
   const sourceSetHeading = make("div", "argus-source-set-heading");
   sourceSetHeading.append(make("div", "", "Argus source reports"), make("p", "", "Open a source PDF to check its figures, or add another report for this company."));
   sourceSet.append(sourceSetHeading);
+  if(Object.values(bundle.analyst?.marketData || {}).some(t=>t?.rows?.length) || bundle.analyst?.forecastUpdates?.length){
+    const jump=make("button","phone-jump","View forecasts & revisions ↓");jump.type="button";jump.dataset.scrollTarget="argus-forecasts";sourceSet.append(jump);
+  }
   const sourceSetGrid = make("div", "argus-source-set-grid");
   [
     { key: "analyst", label: "Analyst", description: "Thesis, estimates, valuation, risks" },

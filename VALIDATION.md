@@ -1,6 +1,6 @@
-# Release checks — 4.7.0
+# Release checks — 4.8.0
 
-Tested November 25, 2026. This is a prebuilt static website. The production host and physical devices have not been tested for this release.
+Tested November 26, 2026. The website ZIP runs locally before deployment. Physical devices and the new build on the production host are separate checks.
 
 ## What was verified
 
@@ -13,7 +13,7 @@ Tested November 25, 2026. This is a prebuilt static website. The production host
 | Real-report reading flows | 17 passed | All priority fields together, all eight years in the PayPal example, individual source cells, correct original PDF page, separate per-figure dates, annual/quarterly year focus, staged Argus updates and session switching. |
 | Real-report Chromium flows | 21 passed | 320/390/1440px layouts, import and completion, report switching, offline screen, no report uploads, cookies or storage entries. |
 
-Across those suites, 200 checks passed. An independent Poppler position check located **952 printed figures in 12 original PDFs**, covering Morningstar priority metrics, current/prior revisions, and Argus Analyst annual/quarterly chart values. At 320px wide and 200% zoom, a browser test verifies that the selected figure actually scrolls into view. A separate local comparison matched **1,375 cells across 241 independently checked rows in 132 tables from 24 PDFs**. Their row labels, printed period columns and PDF page numbers matched the private reference data. This check overlaps some handoff regressions; it is not a percentage accuracy score. No report PDFs, customer information or private goldens are in the release or in Git history.
+Across the six suites above, 200 checks passed. The additional mobile suite opens generated Morningstar and Argus files via the native input, follows seven years and split revisions through a vertical metric view, uses browser Back through the original PDF, adds sources later, rejects mixed uploads, and checks narrow/landscape layouts and session cleanup. It also checks that sharing includes only the site URL. An independent Poppler position check located **952 printed figures in 12 original PDFs**, covering Morningstar priority metrics, current/prior revisions, and Argus Analyst annual/quarterly chart values. At 320px wide and 200% zoom, a browser test verifies that the selected figure actually scrolls into view. A separate local comparison matched **1,375 cells across 241 independently checked rows in 132 tables from 24 PDFs**. Their row labels, printed period columns and PDF page numbers matched the private reference data. This check overlaps some handoff regressions; it is not a percentage accuracy score. No report PDFs, customer information or private goldens are in the release or in Git history.
 
 ## Repeat it
 
@@ -25,4 +25,4 @@ Across those suites, 200 checks passed. An independent Poppler position check lo
 
 Unseen layouts are not guaranteed. A page containing only printed headers may still require visual inspection: the missing-text notice detects pages with no selectable text at all. Continuations are combined only when the repeated sections give compatible model context; conflicting source figures remain separate. Scans without selectable text need the original text-based PDF; there is no OCR. A printed dash, N/A, or “None” is not a numerical zero. Review an ambiguous value against the original; the reader does not validate the analyst's forecast or fetch live prices. Each visitor’s tab processes its own PDFs and clears them on refresh/close. A phone may discard a background tab.
 
-The mobile checks used Chromium at phone viewport sizes. Test an actual iPhone/Safari and Android file picker on the deployed HTTPS link before forwarding it. See the repository’s Actions page for the status of each public build. The licensed regression PDFs are tested locally and are never uploaded to GitHub.
+Run npm run test:mobile with Chromium and WebKit installed to exercise both the Pixel and iPhone touch profiles. Browser emulation tests the reader and the file-input API; it does not operate the real OS Files/Downloads or share sheet. A quick check on an actual iPhone and Android with a downloaded PDF is still useful before forwarding the link. See the repository’s Actions page for the status of each public build. The licensed regression PDFs are tested locally and are never uploaded to GitHub.

@@ -24,8 +24,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npx --no-install playwright install --with-deps chromium
+      - run: npx --no-install playwright install --with-deps chromium webkit
       - run: npm run test:public
+      - run: npm run test:mobile
       - run: python3 package-release.py --site-only artifacts/WEBSITE-UPLOAD.zip
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
