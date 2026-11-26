@@ -78,31 +78,42 @@ export function installMetricReader(doc, onSource) {
 // triggers the normal session cleanup.
 export function installReadingBack(view,dialogs){
   const token=Math.random().toString(36).slice(2),history=view.history;
-  const marker='readerPanel',owned=()=>history.state?.[marker]===token;
-  const phone=view.matchMedia('(max-width: 760px)'),top=()=>[...dialogs].reverse().find(d=>d.open);
-  let armed=false,unwinding=false,leaving=false;
+  const marker='readerPanel',levelKey='readerPanelLevel';
+  const phone=view.matchMedia('(max-width: 760px)'),opened=()=>dialogs.filter(d=>d.open);
+  const level=()=>history.state?.[marker]===token?Math.max(0,Number(history.state[levelKey])||0):0;
+  let active=false,unwinding=false,leaving=false;
   function sync(){
     if(leaving||unwinding)return;
+    const desired=opened().length,current=level();
+    if(!desired&&!current){active=false;return;}
+    if(!current&&!active&&!phone.matches)return;
     try{
-      if(top()&&(phone.matches||armed)){
-        if(!owned())history.pushState({...history.state,[marker]:token},'');
-        armed=true;
-      }else if(!top()&&armed&&owned()){
-        unwinding=true;history.back();
+      // Both entries are created as the user opens their respective views.
+      // Back never needs to synthesize a new history entry.
+      if(desired>current){
+        active=true;
+        for(let i=current+1;i<=desired;i++)history.pushState({...history.state,[marker]:token,[levelKey]:i},'');
+      }else if(desired<current){
+        unwinding=true;history.go(desired-current);
       }
-    }catch{armed=false;unwinding=false;} // Native dialog Close remains available.
+    }catch{active=false;unwinding=false;} // Native dialog Close remains available.
   }
   const observer=new view.MutationObserver(sync);
   for(const d of dialogs)observer.observe(d,{attributes:true,attributeFilter:['open']});
   view.addEventListener('popstate',()=>{
     if(leaving)return;
-    if(unwinding){unwinding=false;armed=false;sync();return;}
-    if(armed&&!owned()){
-      armed=false;top()?.close();sync();
-    }else if(owned()&&!top()){
-      const state={...history.state};delete state[marker];history.replaceState(state,'');armed=false;
+    if(unwinding){unwinding=false;sync();return;}
+    const target=level(),layers=opened();
+    if(active&&target<layers.length){
+      layers.slice(target).reverse().forEach(d=>d.close()); active=target>0;
+    }else if(target>layers.length){
+      // Forward to a dismissed layer must never restore report contents.
+      const state={...history.state};
+      if(layers.length)state[levelKey]=layers.length;
+      else {delete state[marker];delete state[levelKey];}
+      history.replaceState(state,'');active=layers.length>0;
     }
   });
-  view.addEventListener('pagehide',()=>{leaving=true;armed=false;unwinding=false;});
+  view.addEventListener('pagehide',()=>{leaving=true;active=false;unwinding=false;});
   view.addEventListener('pageshow',()=>{leaving=false;});
 }

@@ -21,7 +21,7 @@ try{
    const loaded=()=>page.waitForFunction(()=>document.querySelector('#status-pill').textContent==='In this session'&&!document.querySelector('#open-pdf').disabled);
    const tap=s=>page.locator(s).tap();
    const open=sel=>page.locator(sel).waitFor({state:'visible'});
-   const back=async(id)=>{await page.evaluate(()=>history.back());await page.locator(id).waitFor({state:'hidden'});};
+   const back=async(id)=>{await page.goBack({waitUntil:'commit'});await page.locator(id).waitFor({state:'hidden'});};
    const count=()=>page.evaluate(async()=>(await window.desktopApi.listReports()).length);
    const sized=async sel=>assert.ok((await page.locator(sel).boundingBox()).height>=44,sel+' should be a touch target');
    const noSideScroll=async sel=>assert.ok(await page.locator(sel).evaluate(e=>e.scrollWidth<=e.clientWidth+1),sel+' overflows');
@@ -44,6 +44,8 @@ try{
    const line=page.locator('.metric-line').last();await line.tap();await page.waitForFunction(()=>document.querySelector('#source-viewer').dataset.renderedPage==='2');
    assert.match(await page.locator('.source-evidence').innerText(),/17\.80/);await back('#source-viewer');assert.equal(await page.locator('#metric-reader').isVisible(),true);
    assert.equal(await page.locator('.series-value strong').last().textContent(),'17.80');await back('#metric-reader');assert.equal(await panel.locator('select').inputValue(),'2037');assert.equal(await count(),1);
+   await page.goForward({waitUntil:'commit'});assert.equal(await page.locator('#metric-reader').isVisible(),false);assert.equal(await page.locator('#source-viewer').isVisible(),false);
+   await page.goBack({waitUntil:'commit'});assert.equal(await count(),1);
    mark('phone Back returns from the exact PDF value to the metric and then the filtered table, with the session intact');
    await pick('#toolbar-add-report',continuedMorningstar());await loaded();await page.locator('#priority-grid .revision-table').waitFor({state:'attached'});assert.equal(await count(),2);
    await tap('#mobile-forecast-jump');await panel.locator('.metric-reader-trigger').tap();await chooseMetric('revisions / revenue');
