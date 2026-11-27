@@ -17,8 +17,8 @@
     "test:corpus": "node tests/private-corpus.mjs"
   },
   "devDependencies": {
-    "@napi-rs/canvas": "0.1.100",
-    "jsdom": "26.1.0",
-    "playwright": "1.62.1"
+    "@napi-rs/canvas": "1.2.0",
+    "jsdom": "31.0.1",
+    "playwright": "1.65.1"
   }
 }
