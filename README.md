@@ -1,9 +1,11 @@
-# Research Report Reader 4.7
+# Research Report Reader 4.8
 
 A public, static Morningstar and Argus PDF reader for phones and computers.
 It surfaces source financials, forecasts, targets and analyst reasoning, retaining
 historical years, units, actual/forecast labels and distinctions between sources.
-It does not generate an independent investment recommendation. Opening a report shows all years. On a phone, choose a fiscal year to see it across metrics, then tap a figure to verify the printed value, page and date when available. Saving a text summary includes all periods, even while a single year is selected.
+It does not generate an independent investment recommendation. Tap **Choose PDF files**. One Morningstar file or one to three Argus files for one company open directly. If you start with one Argus file, **Add another source** attaches the rest to the same report.
+
+All years open by default. On a phone, **View financials & forecasts → Read one metric** lists the printed periods vertically. A figure opens its original PDF evidence when available. Back or Close returns to the same metric, then to the table. You can also choose a fiscal year across metrics. Neither view changes the text export. **Share reader link** shares the website only; **Add to Home Screen** is optional.
 
 If a chart misses a number, the other quarters and annual totals stay visible. “Not captured” means the reader found no value at that position; “Review” flags conflicting placement. A printed zero, dash or N/A keeps its original meaning. When you tap a value, the PDF viewer highlights the printed figure if its position is known.
 
@@ -37,13 +39,13 @@ publishers do not need Node or npm.
 - npm ci
 - npm start — preview at http://127.0.0.1:8080
 - npm test — session, financial accuracy, comparison and packaging tests
-- npx playwright install chromium, then npm run test:public — mobile browser flow with a generated PDF
+- npx playwright install --with-deps chromium webkit, then npm run test:public and npm run test:mobile — generated PDFs, Android Chromium and iPhone WebKit profiles
 - READER_HANDOFF=/path/to/private/handoff npm run test:corpus — compare PDF cells to independently checked source rows
 - READER_CORPUS=/path/to/private/reports npm run test:reading
 - READER_CORPUS=/path/to/private/reports npm run test:source
 - READER_CORPUS=/path/to/private/reports npm run test:browser
 
-Browser testing uses Playwright Chromium; set CHROMIUM_EXECUTABLE_PATH if needed.
+Set CHROMIUM_EXECUTABLE_PATH to use a local Chromium binary; the phone suite defaults to both engines. READER_ENGINES=chromium or webkit runs one explicitly. Browser emulation does not verify an actual operating system’s file picker.
 Regression PDF files are intentionally excluded from the website and release.
 
 See HANDOFF.md for architecture, VALIDATION.md for test results and limitations, and GITHUB-SETUP.md for the maintenance workflow. To build the deployable site run `python3 package-release.py --site-only artifacts/WEBSITE-UPLOAD.zip`. The public website itself does not use Python or Node.

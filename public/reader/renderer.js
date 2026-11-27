@@ -1,3 +1,4 @@
+import {installMetricReader,installReadingBack} from './metric-reader.js';
 import {quotedValue} from './quoted-value.js';
 import {addYearFocus,tagYear} from './year-focus.js';
 import {groupColumns,columnIdentity,periodLabel,unitLabel} from './report-periods.js';
@@ -74,6 +75,8 @@ const refs = {
 };
 
 const sourceViewer = createSourceViewer(pdfjsLib, document.getElementById('source-viewer'));
+const metricReader = installMetricReader(document, openEvidence);
+installReadingBack(window, [metricReader.dialog, document.getElementById('source-viewer')]);
 const reportFinder = createReportFinder(refs.workspace, () => currentMode === 'argus' ? refs.argusReportView : refs.reportView);
 installSectionNavigation(refs.workspace);
 
@@ -191,6 +194,9 @@ refs.workspace.addEventListener('click', async event => {
   const button = event.target.closest('[data-source-type]');
   if (!button) return;
   event.preventDefault(); // A source button inside a summary must not collapse the section.
+  openEvidence(button);
+});
+function openEvidence(button) {
   if (operationBusy || !currentRecord || !window.desktopApi?.openOriginalPdf) return;
   const index = sourceDocuments.findIndex(source => source.type === button.dataset.sourceType);
   if (index < 0) { showError('The matching source PDF is unavailable. Reopen this session report.'); return; }
@@ -198,7 +204,7 @@ refs.workspace.addEventListener('click', async event => {
   const recordId = currentRecord.id;
   const evidence=button.dataset.evidence ? JSON.parse(button.dataset.evidence) : null;
   sourceViewer.open(sourceDocuments, index, Number(button.dataset.sourcePage) || 1, (selectedIndex, page) => window.desktopApi.openOriginalPdf({id:recordId,index:selectedIndex,sourceType:sourceDocuments[selectedIndex]?.type,page}), evidence);
-});
+}
 refs.workspace.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('td[data-source-type]')){event.preventDefault();event.target.click();}});
 installTableNavigation(refs.workspace);
 
@@ -360,7 +366,7 @@ async function refreshLibrary() {
 }
 
 function showEmptyState() {
-  sourceViewer.close(); reportFinder.reset();
+  sourceViewer.close(); metricReader.close(); reportFinder.reset();
   sourceDocuments = [];
   document.getElementById("find-report").hidden = true;
   currentReport = null;
@@ -508,6 +514,7 @@ function renderMetricGroup(group) {
   scroll.setAttribute("role", "region");
   scroll.setAttribute("aria-label", `${group.title}: scroll horizontally for all years`);
   const table = make("table", "compact-model-table key-metrics-table");
+  table.dataset.seriesGroup=group.title;
   table.style.setProperty("--period-count", String(columns.length));
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
@@ -521,6 +528,7 @@ function renderMetricGroup(group) {
   const tbody = document.createElement("tbody");
   group.metrics.forEach((metric) => {
     const row = make("tr", "key-metric-row");
+    row.dataset.seriesLabel=metric.label;
     const label = make("th", "metric-name-cell", metric.label);
     appendMetricUnit(label, metric);
     label.scope = "row";
@@ -545,6 +553,7 @@ function renderMetricGroup(group) {
 
 function renderRevisionTable(revisions) {
   const table = make("table", "compact-model-table revision-table");
+  table.dataset.seriesGroup="Forecast revisions";
   const years = [...new Set(revisions.metrics.flatMap((metric) => metric.pairs.map((pair) => pair.year)))];
   table.style.setProperty("--revision-year-count", String(years.length));
   const thead = document.createElement("thead");
@@ -572,6 +581,7 @@ function renderRevisionTable(revisions) {
   const tbody = document.createElement("tbody");
   revisions.metrics.forEach((metric) => {
     const row = document.createElement("tr");
+    row.dataset.seriesLabel=metric.label;
     const label = make("th", "revision-metric-column", metric.label);
     appendMetricUnit(label, metric);
     label.scope = "row";
@@ -597,6 +607,7 @@ function renderRevisionTable(revisions) {
 function renderPriorityMetrics(report) {
   const model = report.forecastModel || {};
   const important = model.importantMetrics;
+  document.getElementById('mobile-forecast-jump').hidden = !important?.found;
   clear(refs.priorityGrid);
 
   const range=(years,label)=>years?.length ? (years.length===1?years[0]:years[0]+'–'+years.at(-1))+' '+label : null;
@@ -878,7 +889,8 @@ function renderReport(report) {
 
 
 function setLoadingDisabled(disabled) {
-  if (disabled) { sourceViewer.close(); reportFinder.close(); }
+  if (disabled) { sourceViewer.close(); metricReader.close(); reportFinder.close(); }
+  document.getElementById('quick-open-pdf').disabled = disabled;
   document.getElementById("find-report").disabled = disabled;
   refs.reportLibrary.inert = disabled;
   refs.reportLibrary.setAttribute('aria-busy', String(disabled));
@@ -1082,23 +1094,38 @@ async function pickAndProcess(provider) {
   }
 }
 
-function loadBrowserFiles(fileList) { return runReportOperation(() => readBrowserFiles(fileList)); }
+function choosePdfFiles() {
+  if (operationBusy) return;
+  pendingProvider=null; refs.fileInput.multiple=true; refs.fileInput.value='';
+  refs.fileInput.click(); // Keep the system picker directly inside the tap on iOS.
+}
+function loadBrowserFiles(fileList) {
+  const files=Array.from(fileList || []), provider=pendingProvider;
+  pendingProvider=null; refs.fileInput.value='';
+  if (!files.length) return;
+  return runReportOperation(() => readBrowserFiles(files,provider));
+}
 
-async function readBrowserFiles(fileList) {
+async function readBrowserFiles(fileList,provider) {
+  const version=sessionVersion;
   const files = [...(fileList || [])];
   if (!files.length) return;
   if (files.some((file) => file.type && file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf"))) {
-    showToast("Choose PDF reports only.");
+    showError("Choose a PDF report from Files or Downloads.");
     return;
   }
   if (files.length > 3) {
-    showToast("Choose one Morningstar PDF or up to three Argus PDFs.");
+    showError("Choose one Morningstar PDF or up to three Argus PDFs for one company.");
     return;
   }
+  if (files.some(file=>file.size>60*1024*1024)) {showError("Each PDF must be 60 MB or smaller. Choose a smaller file.");return;}
   const documents = [];
-  for (const file of files) documents.push({ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) });
-  await processDocuments(documents, pendingProvider);
-  pendingProvider = null;
+  for (const file of files) {
+    const bytes=new Uint8Array(await file.arrayBuffer());
+    if(version!==sessionVersion)return;
+    documents.push({name:file.name,bytes});
+  }
+  await processDocuments(documents,provider);
 }
 
 function openSavedReport(id) { return runReportOperation(() => readSavedReport(id)); }
@@ -1196,19 +1223,11 @@ refs.emptyOpenArgus.addEventListener("click", (event) => {
 });
 refs.chooseMorningstar.addEventListener("click", () => openWithDesktopPicker("morningstar"));
 refs.chooseArgus.addEventListener("click", () => openWithDesktopPicker("argus"));
-document.getElementById("toolbar-add-report").addEventListener("click", showProviderDialog);
+document.getElementById("quick-open-pdf").addEventListener("click", choosePdfFiles);
+document.getElementById("toolbar-add-report").addEventListener("click", () => mobileQuery.matches ? choosePdfFiles() : showProviderDialog());
 refs.sidebarOpenMorningstar.addEventListener("click", () => openWithDesktopPicker("morningstar"));
 refs.sidebarOpenArgus.addEventListener("click", () => openWithDesktopPicker("argus"));
 
-refs.dropZone.addEventListener("click", (event) => {
-  if (!event.target.closest("button")) showProviderDialog();
-});
-refs.dropZone.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    showProviderDialog();
-  }
-});
 refs.fileInput.addEventListener("change", () => loadBrowserFiles(refs.fileInput.files));
 refs.librarySearch.addEventListener("input", renderLibrary);
 refs.libraryProviderFilter?.addEventListener("click", (event) => {
@@ -1307,7 +1326,7 @@ function setSidebarCollapsed(collapsed) {
   sidebarToggle.setAttribute('aria-label', collapsed ? 'Show reports' : 'Hide reports');
   backdrop.hidden = collapsed || !mobileQuery.matches;
   refs.workspace.inert = !collapsed && mobileQuery.matches;
-  if (!collapsed && mobileQuery.matches) document.getElementById('library-search').focus();
+  if (!collapsed && mobileQuery.matches) document.getElementById('close-library').focus({preventScroll:true});
 }
 let desktopSidebarCollapsed = false;
 function preferredSidebar() { return desktopSidebarCollapsed; }

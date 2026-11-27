@@ -1,6 +1,6 @@
 {
   "name": "research-report-reader-session",
-  "version": "4.7.0",
+  "version": "4.8.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -12,6 +12,7 @@
     "test:reading": "node tests/reading-flow.mjs",
     "test:source": "node --test tests/source-accuracy.mjs",
     "test:browser": "node tests/browser-flow.mjs",
+    "test:mobile": "node tests/mobile-reading.mjs",
     "test:public": "node tests/public-browser.mjs",
     "test:corpus": "node tests/private-corpus.mjs"
   },

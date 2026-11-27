@@ -26,7 +26,7 @@ def website():
         if not public_ok(rel):raise ValueError(f'Unapproved website asset: {rel}')
         if p.stat().st_size>=25*1024*1024:raise ValueError(f'Oversize asset: {rel}')
         files[rel]=p
-    required=PAGES|VENDOR|{'reader/boot.js','reader/renderer.js','reader/report-periods.js','reader/priority-sections.js','reader/year-focus.js','reader/quoted-value.js','reader/headline-evidence.js','reader/cell-evidence.js','reader/assets/icon-192.png','reader/assets/icon-512.png'}
+    required=PAGES|VENDOR|{'reader/boot.js','reader/renderer.js','reader/report-periods.js','reader/priority-sections.js','reader/year-focus.js','reader/metric-reader.js','reader/phone-reading.css','reader/quoted-value.js','reader/headline-evidence.js','reader/cell-evidence.js','reader/assets/icon-192.png','reader/assets/icon-512.png'}
     if not required<=files.keys() or len(files)>1000:raise ValueError('Incomplete or oversize website')
     data=io.BytesIO()
     with zipfile.ZipFile(data,'w') as z:

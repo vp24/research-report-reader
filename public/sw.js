@@ -1,4 +1,4 @@
-const CACHE='reader-shell-v4.7-session';
+const CACHE='reader-shell-v4.8-session';
 const OFFLINE=['/offline.html','/offline.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(OFFLINE)));self.skipWaiting();});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('reader-shell-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});

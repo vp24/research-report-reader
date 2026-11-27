@@ -1,25 +1,29 @@
-RESEARCH REPORT READER 4.7 — SESSION-ONLY WEBSITE
+RESEARCH REPORT READER 4.8 — WEBSITE
 
-1. Extract this download.
-2. Open https://dash.cloudflare.com/ and sign in or create a Cloudflare account.
-3. Go to Workers & Pages > Create application > Get started > Drag and drop your files.
-   Choose Pages / a static site if the dashboard offers multiple choices.
-4. Pick a project name and upload WEBSITE-UPLOAD.zip from this package.
-   Upload that inner ZIP as it is. It already contains the finished website.
-5. Select Deploy site (or Save and Deploy).
-6. Open the supplied .pages.dev link, test a PDF, and send that link to the reader.
+UPDATE YOUR EXISTING SITE
+1. Open Workers & Pages in Cloudflare and select your existing reader project.
+2. Choose Create a new deployment, select Production, and upload WEBSITE-UPLOAD.zip.
+3. Select Deploy, then open your usual .pages.dev website link in a fresh tab.
+   If GitHub provided a verified-website.zip wrapper, extract it once first.
+   The WEBSITE-UPLOAD.zip itself should be uploaded as-is.
 
-Use Cloudflare Pages' free plan. No Render service, paid database, build command,
-GitHub repository, or npm installation is needed. A custom domain is optional.
-Only the person publishing needs a Cloudflare account; visitors need no account.
+FIRST DEPLOYMENT ONLY
+In Workers & Pages, choose Create application. If the Workers page offers
+“Continue to Pages”, use that link. Choose the Pages direct-upload option,
+create your project, upload WEBSITE-UPLOAD.zip and select Deploy site.
+Readers just need the public site link. No app store, npm, or account needed.
 
-HOW TO USE
-Open the website on a phone or computer. Choose Morningstar or Argus and select
-downloaded PDF reports. For Argus, one file is enough. Use Add another source
-later to add the same company's A6 or Options report. Tap a number or Source PDF
-to verify it against the original page. All historical and forecast years remain
-available. On a phone, choose a fiscal year to read down one column; Show all
-years restores the full view. Exports always include all printed periods.
+HOW TO READ ON A PHONE
+1. Save the research PDF on your device. Open the reader link and tap Choose
+   PDF files; look in Files or Downloads. One Argus file is enough to start.
+   Add another source attaches other Argus reports for that company later.
+2. Tap View financials & forecasts (or View forecasts & revisions), then
+   Read one metric. All reported years for that metric are listed vertically.
+3. Tap a number with a PDF page to see the original. Back or Close takes you
+   back to the figures. The full-width tables and all years remain available.
+
+Share reader link sends the website address, not your reports. Add to Home
+Screen is optional; it puts an icon on your phone.
 
 SESSION BEHAVIOR
 Reports stay in memory in the current tab. You can switch between them while the
@@ -29,13 +33,5 @@ on the device are unchanged. Keep the downloaded PDFs to open them again later.
 Mobile browsers may discard a background tab, which also ends the session.
 There are no accounts, cloud uploads, report storage, or cross-device syncing.
 
-UPDATES
-Use Create a new deployment in the same Cloudflare Pages project, select
-Production, and upload the new WEBSITE-UPLOAD.zip. The public link stays the same.
-
-The source folder is for future development; do not upload it to the host.
-This package is ready to upload, but has not itself been deployed.
-
-TO MAINTAIN THE CODE (OPTIONAL)
-See GITHUB-SETUP.md. The source folder includes a ready-to-publish Git repository.
-Readers do not need GitHub, Cloudflare, ChatGPT, or an app installation.
+The website ZIP is ready for upload; building it does not publish it.
+Maintainers: see GITHUB-SETUP.md for build checks and future updates.
